@@ -1,0 +1,118 @@
+reset;
+options solver gurobi;
+
+param plans default 0;
+param UB default 10000;
+param LB default 0;
+param tol default 10^-4;
+param tmax default 7200;
+param tSolve{0..plans} default 0;
+param time default 0;
+param itermax := 9; 
+param tfin{0..itermax} default 0;
+param initBudgetA := 8;
+param BudgetAInc := 4;
+
+model MFNIPR_HT.mod; 
+data HT5_1_40.dat; #### change to desired dataset
+
+problem masterproblem: hpi, tpi, theta, nodetheta, y, wIn, wOut, adjCost, intAdjCost, deltaIn, deltaOut, eta, 
+	objVal, cutval, sourceSide, sourceSideOutNew, sinkSide, arcInCut, arcOutNewInCut, arcInNewInCut, nodeInCut, noIntNew, knapsackA, intTrafCost1, intTrafCost2, trafIntMc1, trafIntMc2, trafIntMc3, reconstitutionOut, reconstitutionIn, fullOut, fullIn, promotion, newTraf, passBotVicW, passNewBotVicW;
+
+
+problem subproblem: flow, nodeflow, flownew, zOut, zIn, 
+	outflow, inBalance, outBalance, nodeflowCap, nodeflowCapInc, flowCapNew, flowCapNewOut, intNeighborBelow, intNeighborAbove, replaceIntTraf, replaceIntBottom, noPromoteInt, newArcsT, newArcsTB, newArcsNewB, newArcsV, noRepeat; 
+
+
+let budgetA := initBudgetA;
+for {iter in 1..itermax}{
+## reinitialize starting values
+let nPlans := 0;
+let UB := 10000;
+let LB := 0;
+let budgetA := initBudgetA + (iter - 1)*BudgetAInc;
+
+printf "##########" >> MFNIPR_HTAG_40.out;
+printf "\nAttacker Budget: %d\n", budgetA >> MFNIPR_HTAG_40.out;
+let time := 0;
+## solve problem
+repeat while (UB - LB > tol && tSolve[nPlans]+time < tmax) {
+#repeat while (nPlans < 1) {
+  solve masterproblem;
+  display {i in 1..numNodes: y[i,i]=1};
+  let LB := eta;
+    
+  for {(i,j) in SPLIT} {
+     let ybar[i,j] := y[i,j];
+  }
+
+  solve subproblem;
+  
+  if outflow <= UB then {
+     for {(i,j) in SPLIT}{
+       let yopt[i,j] := y[i,j];
+     }
+     for {(i,j) in ARCSnewOut}{
+       let zoptOut[i,j] := zOut[i,j];
+     }
+     for {(i,j) in ARCSnewIn}{
+     	let zoptIn[i,j] := zIn[i,j];
+     }
+  } 
+  
+  let time:=_ampl_elapsed_time + _total_solve_elapsed_time - sum{it in 1..iter} tfin[it-1];
+   	
+  if time < tmax then {  
+  	let UB := min(outflow, UB);
+  	let nPlans := nPlans + 1;
+  	let plans := plans + 1;
+    let tSolve[nPlans] := time - sum{it in 1..nPlans} tSolve[it-1];
+    
+  	for {(i,j) in ARCSnewOut} {
+     	let zbarOut[nPlans,i,j] := zOut[i,j];
+  	}
+  	for {(i,j) in ARCSnewIn} {
+     	let zbarIn[nPlans,i,j] := zIn[i,j];
+  	}
+  	for {(i,j) in SPLIT}{
+  		let yBarM[nPlans,i,j] := ybar[i,j];
+  	}
+  	let etaBar[nPlans] := eta;
+
+   	display {(i,j) in ARCSnewOut: zbarOut[nPlans,i,j]=1};
+   	display {(i,j) in ARCSnewIn: zbarIn[nPlans,i,j]=1};
+   	display nPlans;
+
+   ## output current iterates and objective values
+   printf "Number of Previously Visited Plans: %d\n", nPlans-1 >> MFNIPR_HTAG_40.out;
+   printf "Master Problem Objective: %f\n", objVal >> MFNIPR_HTAG_40.out;
+   printf "Interdiction Plan: \n" >> MFNIPR_HTAG_40.out;
+   print {i in 1..numNodes: y[i,i]=1} i >> MFNIPR_HTAG_40.out;
+   printf "Sub Problem Objective: %f\n", outflow >> MFNIPR_HTAG_40.out;
+   printf "Reconstitution Plan: \n" >> MFNIPR_HTAG_40.out;
+   print {(i,j) in ARCSnewOut: zOut[i,j]=1} (i,j) >> MFNIPR_HTAG_40.out;
+   print {(i,j) in ARCSnewIn: zIn[i,j]=1} (i,j) >> MFNIPR_HTAG_40.out;
+   printf "Time Elapsed: %f\n", time >> MFNIPR_HTAG_40.out;
+   }
+}
+
+display UB - LB;
+display {i in 1..numNodes: yopt[i,i]=1};
+display {(i,j) in ARCSnewOut: zoptOut[i,j]=1};
+display {(i,j) in ARCSnewIn: zoptIn[i,j]=1};
+let tfin[iter]:= _ampl_elapsed_time + _total_solve_elapsed_time - sum{it in 1..iter} tfin[it-1];
+display tfin[iter];
+
+## output best found solution
+printf "TLF Lower Bound: %f\n", LB >> MFNIPR_HTAG_40.out;
+printf "TLF Upper Bound: %f\n", UB >> MFNIPR_HTAG_40.out;
+printf "Number of Plans visited: %d\n", nPlans >> MFNIPR_HTAG_40.out;
+printf "Optimal Interdiction Plan: \n" >> MFNIPR_HTAG_40.out;
+print {i in 1..numNodes: yopt[i,i]=1} i >> MFNIPR_HTAG_40.out;
+printf "Optimal Reconstitution Plan: \n" >> MFNIPR_HTAG_40.out;
+print {(i,j) in ARCSnewOut: zoptOut[i,j]=1} (i,j) >> MFNIPR_HTAG_40.out;
+print {(i,j) in ARCSnewIn: zoptIn[i,j]=1} (i,j) >> MFNIPR_HTAG_40.out;
+printf "Solve Time: %f\n\n", tfin[iter] >> MFNIPR_HTAG_40.out;
+
+reset data nPlans, zbarIn, zbarOut, yBarM, etaBar;
+}
