@@ -9,6 +9,6 @@ b) your experience with human trafficking research
 
 c) your desired goals for using the generator.
 
-Academic works that use any networks produced must cite "A Transdisciplinary Approach for Generating Synthetic but Realistic Domestic Sex Trafficking Networks." Additionally, please include the following in the acknowledgements section of the work: "We recognize that our research cannot capture all the complexities of the lived experiences of trafficking victims and survivors."
+Academic works that use any networks produced by the network generator must cite "A Transdisciplinary Approach for Generating Synthetic but Realistic Domestic Sex Trafficking Networks" as the source of the data. Additionally, please include the following in the acknowledgements section of the work: "We recognize that our research cannot capture all the complexities of the lived experiences of trafficking victims and survivors."
 
 The authors do not condone the use of the generator, or any networks produced by the generator, for commercial purposes.
