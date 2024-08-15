@@ -1,7 +1,7 @@
 # A Transdisciplinary Approach for Generating Synthetic but Realistic Domestic Sex Trafficking Networks
 This is repository includes data and code associated with "A Transdisciplinary Approach for Generating Synthetic but Realistic Domestic Sex Trafficking Networks" by Daniel Kosmas, Chrstina Melander, Emily Singerhouse, Thomas C. Sharkey, Kayse Lee Maass, Kelle Barrick, and Lauren Martin (URL: https://www.tandfonline.com/doi/full/10.1080/24725854.2023.2169418). 
 
-The authors are happy to generate extra networks or provide access to the code for this network generator upon reasonable request. To request access to the code for this network generator for domestic sex trafficking networks, please email d.kosmas@northeastern.edu with the following information: 
+The authors are happy to generate extra networks or provide access to the code for this network generator upon reasonable request. To request access to the code for this network generator for domestic sex trafficking networks, please email daniel_kosmas@UML.edu with the following information: 
 
 a) your research background
 
